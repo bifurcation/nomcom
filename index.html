@@ -4,9 +4,45 @@
 <head>
 <title>IETF NOMCOM Selection Calculator</title>
 <script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+<style>
+body {
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.content {
+  width: 50vw;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  color: rgb(99, 99, 99);
+}
+
+#volunteers {
+  width: 100%;
+  height: 30em;
+}
+
+#runSelection {
+  display: block;
+  width: 100%;
+  padding: 2em;
+  color: #fff;
+  background: #b0b;
+  cursor: pointer;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: bold;
+}
+</style>
 </head>
 
 <body>
+<div class="content">
 
 <h1>IETF NOMCOM Selection Calculator</h1>
 
@@ -18,7 +54,7 @@ properly from the seeds.</p>
 
 <h2>Volunteers</h2>
 
-<p>The list of volunteers, one per line.</p>
+<p>The list of volunteers, one per line. (Pre-populated with the example names from RFC 3797.)</p>
 
 <textarea id="volunteers">
 John
@@ -53,17 +89,40 @@ Kasczynski
 <p>Each input should be series of integers, separated by any non-digit
 characters. (Pre-populated with the example sources from RFC 3797.)</p>
 
-<ul>
+<ul id="sources">
   <li>
-    <input type="text" id="input2" class="randomnessInput" value="9319"/>
+    <input type="text" class="randomnessInput" value="9319"/>
   </li>
   <li>
-    <input type="text" id="input3" class="randomnessInput" value="2, 5, 12, 8, 10"/>
+    <input type="text" class="randomnessInput" value="2, 5, 12, 8, 10"/>
   </li>
   <li>
-    <input type="text" id="input4" class="randomnessInput" value="9, 18, 26, 34, 41, 45"/>
+    <input type="text" class="randomnessInput" value="9, 18, 26, 34, 41, 45"/>
   </li>
 </ul>
+
+<script>
+function addSource() {
+  let input = document.createElement("input");
+  input.type = "text";
+  input.classList.add("randomnessInput");
+
+  let li = document.createElement("li");
+  li.appendChild(input);
+  
+  document.querySelector("#sources").appendChild(li);
+}
+
+function removeSource() {
+  let sources = document.querySelector("#sources");
+  sources.removeChild(sources.lastChild);
+}
+</script>
+
+<button onClick="addSource()">+</button>
+<button onClick="removeSource()">-</button>
+<br/>
+<br/>
 
 <script>
 
@@ -106,6 +165,8 @@ function runSelection() {
   }
 
   // Render results
+  document.querySelector("#seed").innerText = inputString;
+
   let results = document.querySelector("#results");
 
   for (let row of selections) {
@@ -123,19 +184,22 @@ function runSelection() {
 }
 
 </script>
-<button onclick="runSelection()">Run Selection</button>
+<div id="runSelection" onclick="runSelection()">Run Selection</div>
 
 <h2>Results</h2>
 
-<p>The nominees below are ordered according to the random ordering defined in the
-RFC.  Those above the line are the preliminary selection, to be refined, e.g.,
-according to the rules relating to affiliations.</p>
+<p>The nominees below are ordered according to the random ordering defined in
+the RFC.  They reflect the preliminary selection, to be refined, e.g., according
+to the rules relating to affiliations.</p>
+
+<p>Seed: <span id="seed"></span></p>
 
 <table id="results">
   <tr>
   </tr>
 </table>
 
+</div>
 </body>
 
 </html>
