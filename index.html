@@ -3,7 +3,6 @@
 
 <head>
 <title>IETF NOMCOM Selection Calculator</title>
-<script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
 <style>
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -39,6 +38,83 @@ a {
   font-weight: bold;
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+<script>
+function addSource() {
+  let input = document.createElement("input");
+  input.type = "text";
+  input.classList.add("randomnessInput");
+
+  let li = document.createElement("li");
+  li.appendChild(input);
+  
+  document.querySelector("#sources").appendChild(li);
+}
+
+function removeSource() {
+  let sources = document.querySelector("#sources");
+  sources.removeChild(sources.lastChild);
+}
+
+function runSelection() {
+  // Gather inputs
+  let inputs = [];
+  for (node of document.querySelectorAll(".randomnessInput").values()) { 
+    inputs.push(node.value); 
+  }
+  
+  let volunteers = document.querySelector("#volunteers").value.split("\n").filter(x => x.length > 0);
+
+  // Serialize inputs
+  let inputString = inputs.map(x => x.split(/[^0-9]+/)
+                                     .map(x => parseInt(x))
+                                     .sort((a, b) => a - b)
+                                     .join(".") + ".")
+                          .join("/") + "/";
+  console.log("seed:", inputString);
+
+  // Compute hashes
+  let seed = inputString.split('').map(x => x.charCodeAt(0));
+
+  let counter = 0;
+  let selections = [];
+  while (volunteers.length > 0) {
+      let counterBlock = [counter >> 8, counter & 0xff];
+    let digestInput = counterBlock.concat(seed).concat(counterBlock);
+    let digest = md5.array(digestInput);
+
+    let n = volunteers.length;
+    let i = digest.reduce((a, b) => (256*a + b) % n, 0);
+
+    let selectee = volunteers[i];
+
+    selections.push([md5(digestInput), n, i + 1, selectee])
+
+    counter += 1;
+    volunteers.splice(i, 1);
+  }
+
+  // Render results
+  document.querySelector("#seed").innerText = inputString;
+
+  let results = document.querySelector("#results");
+  while (results.lastChild) {
+    results.removeChild(results.lastChild);
+  }
+
+  for (let row of selections) {
+    let tr = document.createElement("tr");
+
+    for (let elem of row) {
+      let td = document.createElement("td");
+      td.innerText = elem.toString();
+      tr.appendChild(td);
+    }
+
+    results.appendChild(tr);
+  }
+}
+</script>
 </head>
 
 <body>
@@ -101,89 +177,11 @@ characters. (Pre-populated with the example sources from RFC 3797.)</p>
   </li>
 </ul>
 
-<script>
-function addSource() {
-  let input = document.createElement("input");
-  input.type = "text";
-  input.classList.add("randomnessInput");
-
-  let li = document.createElement("li");
-  li.appendChild(input);
-  
-  document.querySelector("#sources").appendChild(li);
-}
-
-function removeSource() {
-  let sources = document.querySelector("#sources");
-  sources.removeChild(sources.lastChild);
-}
-</script>
-
 <button onClick="addSource()">+</button>
 <button onClick="removeSource()">-</button>
 <br/>
 <br/>
 
-<script>
-
-function runSelection() {
-  // Gather inputs
-  let inputs = [];
-  for (node of document.querySelectorAll(".randomnessInput").values()) { 
-    inputs.push(node.value); 
-  }
-  
-  let volunteers = document.querySelector("#volunteers").value.split("\n").filter(x => x.length > 0);
-
-  // Serialize inputs
-  let inputString = inputs.map(x => x.split(/[^0-9]+/)
-                                     .map(x => parseInt(x))
-                                     .sort((a, b) => a - b)
-                                     .join(".") + ".")
-                          .join("/") + "/";
-  console.log("seed:", inputString);
-
-  // Compute hashes
-  let seed = inputString.split('').map(x => x.charCodeAt(0));
-
-  let counter = 0;
-  let selections = [];
-  while (volunteers.length > 0) {
-      let counterBlock = [counter >> 8, counter & 0xff];
-    let digestInput = counterBlock.concat(seed).concat(counterBlock);
-    let digest = md5.array(digestInput);
-
-    let n = volunteers.length;
-    let i = digest.reduce((a, b) => (256*a + b) % n, 0);
-
-    let selectee = volunteers[i];
-
-    selections.push([md5(digestInput), n, i + 1, selectee])
-
-    counter += 1;
-    volunteers.splice(i, 1);
-  }
-
-  // Render results
-  document.querySelector("#seed").innerText = inputString;
-
-  let results = document.querySelector("#results");
-
-  for (let row of selections) {
-    let tr = document.createElement("tr");
-
-    for (let elem of row) {
-      let td = document.createElement("td");
-      td.innerText = elem.toString();
-      tr.appendChild(td);
-    }
-
-    results.appendChild(tr);
-  }
-
-}
-
-</script>
 <div id="runSelection" onclick="runSelection()">Run Selection</div>
 
 <h2>Results</h2>
