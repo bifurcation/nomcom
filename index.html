@@ -37,6 +37,11 @@ a {
   vertical-align: middle;
   font-weight: bold;
 }
+
+#results tr td {
+  font-family: monospace;
+  padding: 0.5ex;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
 <script>
@@ -86,9 +91,14 @@ function runSelection() {
     let n = volunteers.length;
     let i = digest.reduce((a, b) => (256*a + b) % n, 0);
 
+    let selected = `${i + 1}`;
+    if (counter < 10) {
+      selected = `-> ${selected} <-`;
+    }
+
     let selectee = volunteers[i];
 
-    selections.push([md5(digestInput), n, i + 1, selectee])
+    selections.push([counter + 1, md5(digestInput), n, selected, selectee])
 
     counter += 1;
     volunteers.splice(i, 1);
@@ -101,6 +111,15 @@ function runSelection() {
   while (results.lastChild) {
     results.removeChild(results.lastChild);
   }
+
+  let tr = document.createElement("tr");
+  let headers =  ["index", "hex value of md5", "div", "selected", "name"];
+  for (header of headers) {
+    let th = document.createElement("th");
+    th.innerText = header;
+    tr.appendChild(th);
+  }
+  results.appendChild(tr);
 
   for (let row of selections) {
     let tr = document.createElement("tr");
